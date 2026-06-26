@@ -41,3 +41,22 @@ body {
     border: none;
     cursor: pointer;
 }
+
+/*
+ * Griglia usata nella pagina catalogo per mostrare i prodotti.
+ */
+.griglia-prodotti {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+/*
+ * Card grafica del singolo prodotto nel catalogo.
+ */
+.card-prodotto {
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 16px;
+}
