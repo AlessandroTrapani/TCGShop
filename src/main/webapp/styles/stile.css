@@ -1,8 +1,8 @@
 /*
- * Foglio di stile principale di TCGShop.
- * Contiene le regole CSS condivise tra le pagine del sito.
+ * Regole generali applicate a tutto il corpo della pagina.
+ * Rimuove il margine predefinito del browser e imposta
+ * font, colore di sfondo e colore principale del testo.
  */
-
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -10,28 +10,59 @@ body {
     color: #222;
 }
 
+/*
+ * Contenitore centrale usato per allineare il contenuto delle pagine.
+ * La larghezza è responsiva: occupa il 90% dello schermo,
+ * ma non supera mai 1100px.
+ */
 .contenitore {
     width: 90%;
     max-width: 1100px;
     margin: 0 auto;
 }
 
+/*
+ * Intestazione principale del sito.
+ * Contiene il titolo TCGShop e il menu di navigazione.
+ */
 .intestazione-sito {
     background-color: #222;
     color: white;
     padding: 16px 0;
 }
 
+/*
+ * Link presenti nel menu principale.
+ * Sono bianchi, distanziati tra loro e senza sottolineatura.
+ */
 .menu-principale a {
     color: white;
     margin-right: 16px;
     text-decoration: none;
 }
 
+/*
+ * Effetto al passaggio del mouse sui link del menu.
+ * Serve a rendere più chiara l'interazione con l'utente.
+ */
+.menu-principale a:hover {
+    text-decoration: underline;
+}
+
+
+/*
+ * Area principale del contenuto della pagina.
+ * Aggiunge spazio verticale sopra e sotto il contenuto.
+ */
 .contenuto-pagina {
     padding: 30px 0;
 }
 
+/*
+ * Classe generica usata per stilizzare link e pulsanti.
+ * Viene usata, ad esempio, per "Vai al catalogo", "Filtra"
+ * e altri pulsanti delle pagine.
+ */
 .bottone {
     display: inline-block;
     padding: 10px 16px;
@@ -43,7 +74,49 @@ body {
 }
 
 /*
+ * Effetto al passaggio del mouse sui bottoni.
+ */
+.bottone:hover {
+    background-color: #1d4ed8;
+}
+
+/*
+ * Stile base per i form.
+ * Il margine inferiore separa il form dal contenuto successivo.
+ */
+form {
+    margin-bottom: 20px;
+}
+
+/*
+ * Stile base per le label dei form.
+ * Le label vengono rese più leggibili tramite display block.
+ */
+label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+/*
+ * Stile condiviso per input e select.
+ * Verrà usato nei filtri del catalogo e più avanti nei form
+ * di login, registrazione, checkout e admin.
+ */
+input,
+select {
+    width: 100%;
+    max-width: 350px;
+    padding: 8px;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+}
+
+/*
  * Griglia usata nella pagina catalogo per mostrare i prodotti.
+ * auto-fit e minmax permettono alla griglia di adattarsi
+ * automaticamente alla larghezza dello schermo.
  */
 .griglia-prodotti {
     display: grid;
@@ -54,9 +127,95 @@ body {
 
 /*
  * Card grafica del singolo prodotto nel catalogo.
+ * Ogni prodotto viene mostrato dentro un riquadro bianco.
  */
 .card-prodotto {
     background-color: white;
     border: 1px solid #ddd;
     padding: 16px;
+}
+
+/*
+ * Titolo del prodotto all'interno della card.
+ */
+.card-prodotto h3 {
+    margin-top: 0;
+}
+
+/*
+ * Breakpoint per tablet e schermi medi.
+ * Quando la larghezza dello schermo è inferiore a 768px,
+ * il layout viene adattato per essere più leggibile.
+ */
+@media screen and (max-width: 768px) {
+
+    /*
+     * Su schermi più piccoli aumenta la larghezza del contenitore
+     * per sfruttare meglio lo spazio disponibile.
+     */
+    .contenitore {
+        width: 95%;
+    }
+
+    /*
+     * I link del menu vengono mostrati uno sotto l'altro,
+     * così restano leggibili anche su tablet e smartphone.
+     */
+    .menu-principale a {
+        display: block;
+        margin-right: 0;
+        margin-bottom: 8px;
+    }
+
+    /*
+     * Riduce leggermente lo spazio verticale del contenuto
+     * per adattarlo meglio agli schermi piccoli.
+     */
+    .contenuto-pagina {
+        padding: 20px 0;
+    }
+
+    /*
+     * Nei form, input e select occupano tutta la larghezza disponibile
+     * su schermi medi e piccoli.
+     */
+    input,
+    select {
+        max-width: 100%;
+    }
+}
+
+/*
+ * Breakpoint per smartphone.
+ * Questo breakpoint viene applicato su schermi molto piccoli.
+ */
+@media screen and (max-width: 480px) {
+
+    /*
+     * Riduce la dimensione del titolo principale
+     * per evitare che occupi troppo spazio su smartphone.
+     */
+    .intestazione-sito h1 {
+        font-size: 24px;
+    }
+
+    /*
+     * I bottoni occupano tutta la larghezza disponibile,
+     * risultando più comodi da premere su touchscreen.
+     */
+    .bottone {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    /*
+     * Su smartphone la griglia dei prodotti tende a mostrare
+     * una card per riga, migliorando la leggibilità.
+     */
+    .griglia-prodotti {
+        grid-template-columns: 1fr;
+    }
 }
