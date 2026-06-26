@@ -1,6 +1,5 @@
 package model;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
@@ -16,7 +15,7 @@ public class Prodotto {
     private String gioco;
     private String categoria;
     private String rarita;
-    private BigDecimal prezzo;
+    private double prezzo;
     private int quantita;
     private String immagine;
     private String descrizione;
@@ -128,7 +127,7 @@ public class Prodotto {
      * 
      * @return prezzo del prodotto
      */
-    public BigDecimal getPrezzo() {
+    public double getPrezzo() {
         return prezzo;
     }
 
@@ -137,7 +136,7 @@ public class Prodotto {
      * 
      * @param prezzo prezzo del prodotto
      */
-    public void setPrezzo(BigDecimal prezzo) {
+    public void setPrezzo(double prezzo) {
         this.prezzo = prezzo;
     }
 
