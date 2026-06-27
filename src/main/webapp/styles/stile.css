@@ -212,6 +212,41 @@ select {
 }
 
 /*
+ * Tabella usata nella pagina carrello.
+ * Mostra i prodotti aggiunti, le quantità e i totali.
+ */
+.tabella-carrello {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    margin-bottom: 20px;
+}
+
+/*
+ * Celle della tabella carrello.
+ */
+.tabella-carrello th,
+.tabella-carrello td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+/*
+ * Intestazione della tabella carrello.
+ */
+.tabella-carrello th {
+    background-color: #f3f4f6;
+}
+
+/*
+ * I form dentro la tabella non devono aggiungere troppo spazio verticale.
+ */
+.tabella-carrello form {
+    margin-bottom: 0;
+}
+
+/*
  * Breakpoint per tablet e schermi medi.
  * Quando la larghezza dello schermo è inferiore a 768px,
  * il layout viene adattato per essere più leggibile.
@@ -286,5 +321,14 @@ select {
      */
     .griglia-prodotti {
         grid-template-columns: 1fr;
+    }
+    
+        /*
+     * Su smartphone la tabella può scorrere orizzontalmente
+     * se lo spazio non è sufficiente.
+     */
+    .tabella-carrello {
+        display: block;
+        overflow-x: auto;
     }
 }

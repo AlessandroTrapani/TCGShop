@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="model.Prodotto" %>
 <%@ page import="model.Utente" %>
+<%@ page import="model.Carrello" %>
 
 <%
     /*
@@ -9,15 +10,20 @@
      */
     Prodotto prodotto = (Prodotto) request.getAttribute("prodotto");
     String errore = (String) request.getAttribute("errore");
+
+    /*
+     * Recupero l'eventuale utente loggato dalla sessione.
+     * Serve per mostrare Login oppure Logout nel menu.
+     */
+    Utente utenteLoggato = (Utente) session.getAttribute("utenteLoggato");
+
+    /*
+     * Recupero il carrello dalla sessione.
+     * Serve per sapere quanti pezzi del prodotto sono già stati aggiunti.
+     */
+    Carrello carrello = (Carrello) session.getAttribute("carrello");
 %>
 
-<% 
-/*
- * Recupero l'eventuale utente loggato dalla sessione.
- * Serve per mostrare Login oppure Logout nel menu.
- */
-Utente utenteLoggato = (Utente) session.getAttribute("utenteLoggato");
-%>
 
 <!DOCTYPE html>
 <html lang="it">
@@ -110,21 +116,70 @@ Utente utenteLoggato = (Utente) session.getAttribute("utenteLoggato");
                     <h3>Descrizione</h3>
                     <p><%= prodotto.getDescrizione() %></p>
 
-                    <!--
-                        Questo form sarà usato più avanti dalla CarrelloServlet.
-                        Per ora il link può portare a 404 finché non creiamo /carrello.
-                    -->
-                    <form method="post" action="${pageContext.request.contextPath}/carrello">
-                        <input type="hidden" name="azione" value="aggiungi">
-                        <input type="hidden" name="idProdotto" value="<%= prodotto.getId() %>">
+                    <%
+    /*
+     * Calcolo quanti pezzi del prodotto sono già nel carrello.
+     * Se il carrello non esiste ancora, la quantità già presente è 0.
+     */
+    int quantitaGiaNelCarrello = 0;
 
-                        <label for="quantita">Quantità</label>
-                        <input type="number" id="quantita" name="quantita" value="1" min="1" max="<%= prodotto.getQuantita() %>">
+    if (carrello != null) {
+        quantitaGiaNelCarrello = carrello.getQuantitaProdotto(prodotto.getId());
+    }
 
-                        <button class="bottone" type="submit">
-                            Aggiungi al carrello
-                        </button>
-                    </form>
+    /*
+     * Calcolo quanti pezzi l'utente può ancora aggiungere.
+     * Esempio:
+     * disponibilità prodotto = 5
+     * già nel carrello = 2
+     * quantità ancora aggiungibile = 3
+     */
+    int quantitaAggiungibile = prodotto.getQuantita() - quantitaGiaNelCarrello;
+%>
+
+<%
+    /*
+     * Se la quantità aggiungibile è maggiore di zero,
+     * mostro il form per aggiungere al carrello.
+     * Altrimenti mostro un messaggio.
+     */
+    if (quantitaAggiungibile > 0) {
+%>
+
+    <form method="post" action="${pageContext.request.contextPath}/carrello">
+        <input type="hidden" name="azione" value="aggiungi">
+        <input type="hidden" name="idProdotto" value="<%= prodotto.getId() %>">
+
+        <label for="quantita">Quantità</label>
+        <input 
+            type="number" 
+            id="quantita" 
+            name="quantita" 
+            value="1" 
+            min="1" 
+            max="<%= quantitaAggiungibile %>">
+
+        <p>
+            Puoi aggiungere ancora massimo 
+            <strong><%= quantitaAggiungibile %></strong> pezzi.
+        </p>
+
+        <button class="bottone" type="submit">
+            Aggiungi al carrello
+        </button>
+    </form>
+
+<%
+    } else {
+%>
+
+    <p class="messaggio-errore">
+        Hai già aggiunto al carrello tutta la quantità disponibile per questo prodotto.
+    </p>
+
+<%
+    }
+%>
 
                     <a class="bottone" href="${pageContext.request.contextPath}/catalogo">
                         Torna al catalogo

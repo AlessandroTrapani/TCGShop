@@ -41,7 +41,8 @@ public class Carrello {
     /**
      * Aggiunge un prodotto al carrello.
      * 
-     * Se il prodotto è già presente, aumenta la quantità.
+     * Se il prodotto è già presente, aumenta la quantità senza superare
+     * la disponibilità massima del prodotto.
      * Se non è presente, crea una nuova riga nel carrello.
      *
      * @param prodotto prodotto da aggiungere
@@ -50,10 +51,33 @@ public class Carrello {
     public void aggiungiProdotto(Prodotto prodotto, int quantita) {
         ElementoCarrello elementoEsistente = trovaElemento(prodotto.getId());
 
+        /*
+         * La quantità disponibile viene letta dal prodotto recuperato dal database.
+         * Serve per evitare che nel carrello ci siano più pezzi di quelli disponibili.
+         */
+        int quantitaDisponibile = prodotto.getQuantita();
+
         if (elementoEsistente != null) {
             int nuovaQuantita = elementoEsistente.getQuantita() + quantita;
+
+            /*
+             * Se la nuova quantità supera la disponibilità,
+             * la limito alla quantità massima disponibile.
+             */
+            if (nuovaQuantita > quantitaDisponibile) {
+                nuovaQuantita = quantitaDisponibile;
+            }
+
             elementoEsistente.setQuantita(nuovaQuantita);
         } else {
+            /*
+             * Anche quando il prodotto viene aggiunto per la prima volta,
+             * controllo che la quantità richiesta non superi la disponibilità.
+             */
+            if (quantita > quantitaDisponibile) {
+                quantita = quantitaDisponibile;
+            }
+
             ElementoCarrello nuovoElemento = new ElementoCarrello(prodotto, quantita);
             elementi.add(nuovoElemento);
         }
@@ -63,6 +87,8 @@ public class Carrello {
      * Aggiorna la quantità di un prodotto già presente nel carrello.
      * 
      * Se la nuova quantità è minore o uguale a zero, il prodotto viene rimosso.
+     * Se la nuova quantità supera la disponibilità del prodotto, viene limitata
+     * alla quantità massima disponibile.
      *
      * @param idProdotto id del prodotto da aggiornare
      * @param quantita nuova quantità
@@ -74,6 +100,12 @@ public class Carrello {
             if (quantita <= 0) {
                 rimuoviProdotto(idProdotto);
             } else {
+                int quantitaDisponibile = elemento.getProdotto().getQuantita();
+
+                if (quantita > quantitaDisponibile) {
+                    quantita = quantitaDisponibile;
+                }
+
                 elemento.setQuantita(quantita);
             }
         }
@@ -121,6 +153,25 @@ public class Carrello {
         }
 
         return totale;
+    }
+    
+    /**
+     * Restituisce la quantità di un determinato prodotto già presente nel carrello.
+     * 
+     * Questo metodo serve, ad esempio, nella pagina dettaglio prodotto per capire
+     * quanti pezzi l'utente ha già aggiunto e quanti può ancora aggiungere.
+     *
+     * @param idProdotto id del prodotto da cercare nel carrello
+     * @return quantità già presente nel carrello, oppure 0 se il prodotto non è presente
+     */
+    public int getQuantitaProdotto(int idProdotto) {
+        ElementoCarrello elemento = trovaElemento(idProdotto);
+
+        if (elemento != null) {
+            return elemento.getQuantita();
+        }
+
+        return 0;
     }
 
     /**
