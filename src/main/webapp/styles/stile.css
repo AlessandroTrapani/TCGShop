@@ -143,6 +143,32 @@ select {
 }
 
 /*
+ * Riquadro della pagina dettaglio prodotto.
+ * Contiene le informazioni complete del prodotto selezionato.
+ */
+.dettaglio-prodotto {
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 20px;
+}
+
+/*
+ * Area dedicata al nome del file immagine del prodotto.
+ * 
+ */
+.immagine-prodotto {
+    margin-bottom: 20px;
+}
+
+/*
+ * Area che contiene i dati principali del prodotto:
+ * gioco, categoria, rarità, prezzo, disponibilità e descrizione.
+ */
+.informazioni-prodotto {
+    margin-top: 10px;
+}
+
+/*
  * Breakpoint per tablet e schermi medi.
  * Quando la larghezza dello schermo è inferiore a 768px,
  * il layout viene adattato per essere più leggibile.
