@@ -59,7 +59,7 @@ body {
 }
 
 /*
- * Classe generica usata per stilizzare link e pulsanti.
+ * Classe usata per stilizzare link e pulsanti.
  * Viene usata, ad esempio, per "Vai al catalogo", "Filtra"
  * e altri pulsanti delle pagine.
  */
@@ -101,7 +101,7 @@ label {
 
 /*
  * Stile condiviso per input e select.
- * Verrà usato nei filtri del catalogo e più avanti nei form
+ * Viene usato nei filtri del catalogo e nei form
  * di login, registrazione, checkout e admin.
  */
 input,
@@ -166,6 +166,49 @@ select {
  */
 .informazioni-prodotto {
     margin-top: 10px;
+}
+
+/*
+ * Messaggio di errore usato nei form per la validazione JavaScript.
+ * Viene mostrato sotto al campo che contiene un valore non valido,
+ * ad esempio email non valida o password vuota nel login.
+ */
+.messaggio-errore-form {
+    color: #b91c1c;
+    font-size: 14px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+/*
+ * Stile applicato agli input non validi.
+ * Serve a evidenziare visivamente il campo che contiene un errore.
+ */
+.input-errore {
+    border: 1px solid #b91c1c;
+}
+
+/*
+ * Messaggio di errore mostrato nei form, ad esempio nel login
+ * quando le credenziali non sono valide.
+ */
+.messaggio-errore {
+    color: #b91c1c;
+    background-color: #fee2e2;
+    border: 1px solid #fecaca;
+    padding: 10px;
+    margin-bottom: 16px;
+}
+
+/*
+ * Riquadro informativo usato durante lo sviluppo.
+ * Nel login contiene gli utenti di test disponibili nel database.
+ */
+.box-info {
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 16px;
+    margin-top: 24px;
 }
 
 /*

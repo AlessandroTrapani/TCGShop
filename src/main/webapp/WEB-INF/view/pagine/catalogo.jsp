@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="model.Prodotto" %>
+<%@ page import="model.Utente" %>
 
 <%
     /*
@@ -13,6 +14,12 @@
     String gioco = (String) request.getAttribute("gioco");
     String categoria = (String) request.getAttribute("categoria");
 
+    /*
+     * Recupero l'eventuale utente loggato dalla sessione.
+     * Serve per mostrare Login oppure Logout nel menu.
+     */
+    Utente utenteLoggato = (Utente) session.getAttribute("utenteLoggato");
+    
     if (ricerca == null) {
         ricerca = "";
     }
@@ -45,7 +52,21 @@
                 <a href="${pageContext.request.contextPath}/index.jsp">Home</a>
                 <a href="${pageContext.request.contextPath}/catalogo">Catalogo</a>
                 <a href="${pageContext.request.contextPath}/carrello">Carrello</a>
-                <a href="${pageContext.request.contextPath}/login">Login</a>
+                <%
+    /*
+     * Se l'utente è loggato mostro Logout.
+     * Se invece non è loggato mostro Login.
+     */
+    if (utenteLoggato != null) {
+%>
+    <a href="${pageContext.request.contextPath}/logout">Logout</a>
+<%
+    } else {
+%>
+    <a href="${pageContext.request.contextPath}/login">Login</a>
+<%
+    }
+%>
             </nav>
         </div>
     </header>
