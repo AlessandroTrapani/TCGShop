@@ -181,6 +181,18 @@ select {
 }
 
 /*
+ * Sezione del form checkout che contiene i dati della carta.
+ * Viene mostrata solo quando l'utente seleziona il pagamento con carta.
+ */
+#sezione-carta {
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 16px;
+    margin-top: 12px;
+    margin-bottom: 16px;
+}
+
+/*
  * Stile applicato agli input non validi.
  * Serve a evidenziare visivamente il campo che contiene un errore.
  */
