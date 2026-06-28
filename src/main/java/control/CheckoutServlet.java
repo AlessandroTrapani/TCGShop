@@ -177,7 +177,9 @@ public class CheckoutServlet extends HttpServlet {
              */
             carrello.svuota();
             sessione.setAttribute("carrello", carrello);
-
+            
+            sessione.setAttribute("messaggioSuccesso", "Ordine andato a buon fine.");
+            
             response.sendRedirect(request.getContextPath() + "/storico-ordini");
         } else {
             request.setAttribute("errore", "Errore durante il salvataggio dell'ordine.");

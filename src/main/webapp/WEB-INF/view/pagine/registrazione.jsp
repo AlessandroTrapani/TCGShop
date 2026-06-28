@@ -57,6 +57,7 @@
                      */
                     if (utenteLoggato != null) {
                 %>
+                	<a href="${pageContext.request.contextPath}/storico-ordini">I miei ordini</a>
                     <a href="${pageContext.request.contextPath}/logout">Logout</a>
                 <%
                     } else {

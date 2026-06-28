@@ -213,6 +213,18 @@ select {
 }
 
 /*
+ * Messaggio di successo mostrato dopo operazioni completate correttamente,
+ * ad esempio dopo il salvataggio di un ordine.
+ */
+.messaggio-successo {
+    color: #166534;
+    background-color: #dcfce7;	
+    border: 1px solid #bbf7d0;
+    padding: 10px;
+    margin-bottom: 16px;
+}
+
+/*
  * Riquadro informativo usato durante lo sviluppo.
  * Nel login contiene gli utenti di test disponibili nel database.
  */
