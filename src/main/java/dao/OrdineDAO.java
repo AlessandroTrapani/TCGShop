@@ -299,4 +299,34 @@ public class OrdineDAO {
 
         return ordine;
     }
+    
+    /**
+     * Recupera tutti gli ordini presenti nel database.
+     *
+     * Il metodo viene usato nell'area amministratore, dove devono essere visibili
+     * gli ordini di tutti gli utenti.
+     *
+     * @return lista completa degli ordini
+     */
+    public ArrayList<Ordine> trovaTuttiOrdini() {
+        ArrayList<Ordine> ordini = new ArrayList<Ordine>();
+
+        String sql = "SELECT * FROM ordini ORDER BY data_ordine DESC";
+
+        try (
+            Connection connessione = ConnessioneDatabase.getConnessione();
+            PreparedStatement statement = connessione.prepareStatement(sql);
+            ResultSet risultato = statement.executeQuery()
+        ) {
+            while (risultato.next()) {
+                Ordine ordine = creaOrdineDaResultSet(risultato);
+                ordini.add(ordine);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return ordini;
+    }
 }
