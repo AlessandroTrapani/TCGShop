@@ -14,21 +14,22 @@ import util.ConnessioneDatabase;
 
 /**
  * DAO dedicato alla gestione degli ordini.
- * Contiene le query SQL per salvare ordini, dettagli ordine
- * e recuperare lo storico degli acquisti.
+ *
+ * La classe contiene i metodi necessari per salvare un ordine,
+ * recuperare gli ordini di un utente, recuperare gli ordini lato admin
+ * e aggiornare lo stato di un ordine.
  */
 public class OrdineDAO {
 
     /**
      * Salva un ordine nel database partendo dai dati dell'ordine
-     * e dal carrello dell'utente.
+     * e dagli elementi presenti nel carrello.
      *
-     * Il metodo esegue tre operazioni principali:
-     * 1. inserisce una riga nella tabella ordini;
-     * 2. inserisce una riga in dettagli_ordine per ogni prodotto nel carrello;
-     * 3. aggiorna la quantità disponibile dei prodotti acquistati.
+     * Il metodo usa una transazione perché deve eseguire più operazioni:
+     * inserimento ordine, inserimento dettagli ordine e aggiornamento quantità
+     * dei prodotti acquistati.
      *
-     * @param ordine oggetto Ordine con i dati generali dell'acquisto
+     * @param ordine ordine da salvare
      * @param carrello carrello contenente i prodotti acquistati
      * @return true se il salvataggio è riuscito, false altrimenti
      */
@@ -45,68 +46,68 @@ public class OrdineDAO {
             connessione = ConnessioneDatabase.getConnessione();
 
             /*
-             * Disattivo l'autocommit perché il salvataggio dell'ordine
-             * comprende più query collegate tra loro.
-             * Se una query fallisce, annullo tutto con rollback.
+             * Disattiva l'autocommit per gestire manualmente la transazione.
              */
             connessione.setAutoCommit(false);
 
-            PreparedStatement statementOrdine = connessione.prepareStatement(
-                    sqlOrdine,
-                    PreparedStatement.RETURN_GENERATED_KEYS
-            );
+            try (
+                PreparedStatement statementOrdine = connessione.prepareStatement(
+                        sqlOrdine,
+                        PreparedStatement.RETURN_GENERATED_KEYS)
+            ) {
+                statementOrdine.setInt(1, ordine.getIdUtente());
+                statementOrdine.setDouble(2, ordine.getTotale());
+                statementOrdine.setString(3, ordine.getEmailConsegna());
+                statementOrdine.setString(4, ordine.getIndirizzoSpedizione());
+                statementOrdine.setString(5, ordine.getMetodoPagamento());
+                statementOrdine.setString(6, ordine.getStato());
 
-            statementOrdine.setInt(1, ordine.getIdUtente());
-            statementOrdine.setDouble(2, ordine.getTotale());
-            statementOrdine.setString(3, ordine.getEmailConsegna());
-            statementOrdine.setString(4, ordine.getIndirizzoSpedizione());
-            statementOrdine.setString(5, ordine.getMetodoPagamento());
-            statementOrdine.setString(6, ordine.getStato());
+                int righeInserite = statementOrdine.executeUpdate();
 
-            int righeOrdine = statementOrdine.executeUpdate();
+                if (righeInserite > 0) {
+                    ResultSet chiaviGenerate = statementOrdine.getGeneratedKeys();
 
-            if (righeOrdine > 0) {
-                ResultSet chiaviGenerate = statementOrdine.getGeneratedKeys();
+                    if (chiaviGenerate.next()) {
+                        int idOrdine = chiaviGenerate.getInt(1);
 
-                if (chiaviGenerate.next()) {
-                    int idOrdine = chiaviGenerate.getInt(1);
+                        /*
+                         * Inserisce una riga nella tabella dettagli_ordine
+                         * per ogni prodotto presente nel carrello.
+                         */
+                        for (ElementoCarrello elemento : carrello.getElementi()) {
+                            inserisciDettaglioOrdine(connessione, idOrdine, elemento);
+                            scalaQuantitaProdotto(connessione, elemento);
+                        }
 
-                    /*
-                     * Salvo tutti i prodotti del carrello nella tabella dettagli_ordine
-                     * e aggiorno la quantità residua dei prodotti.
-                     */
-                    for (ElementoCarrello elemento : carrello.getElementi()) {
-                        inserisciDettaglioOrdine(connessione, idOrdine, elemento);
-                        scalaQuantitaProdotto(connessione, elemento);
+                        /*
+                         * Conferma tutte le operazioni della transazione.
+                         */
+                        connessione.commit();
+                        salvato = true;
                     }
-
-                    connessione.commit();
-                    salvato = true;
                 }
 
-                chiaviGenerate.close();
-            }
+            } catch (SQLException e) {
+                /*
+                 * In caso di errore annulla tutte le operazioni eseguite
+                 * nella transazione.
+                 */
+                if (connessione != null) {
+                    connessione.rollback();
+                }
 
-            statementOrdine.close();
+                e.printStackTrace();
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
 
-            /*
-             * Se una delle query fallisce, annullo tutte le operazioni
-             * già eseguite nella transazione.
-             */
-            if (connessione != null) {
-                try {
-                    connessione.rollback();
-                } catch (SQLException rollbackException) {
-                    rollbackException.printStackTrace();
-                }
-            }
-
         } finally {
             if (connessione != null) {
                 try {
+                    /*
+                     * Ripristina l'autocommit e chiude la connessione.
+                     */
                     connessione.setAutoCommit(true);
                     connessione.close();
                 } catch (SQLException e) {
@@ -119,61 +120,9 @@ public class OrdineDAO {
     }
 
     /**
-     * Inserisce una riga nella tabella dettagli_ordine.
+     * Recupera tutti gli ordini appartenenti a uno specifico utente.
      *
-     * Ogni riga rappresenta un prodotto acquistato in un ordine.
-     * Nome e prezzo vengono copiati dal prodotto per mantenere lo storico
-     * anche se il prodotto viene modificato successivamente.
-     *
-     * @param connessione connessione SQL già aperta
-     * @param idOrdine id dell'ordine appena creato
-     * @param elemento elemento del carrello da salvare
-     * @throws SQLException se la query fallisce
-     */
-    private void inserisciDettaglioOrdine(Connection connessione, int idOrdine, ElementoCarrello elemento)
-            throws SQLException {
-
-        String sql = "INSERT INTO dettagli_ordine "
-                + "(id_ordine, id_prodotto, nome_prodotto, prezzo, quantita) "
-                + "VALUES (?, ?, ?, ?, ?)";
-
-        PreparedStatement statement = connessione.prepareStatement(sql);
-
-        statement.setInt(1, idOrdine);
-        statement.setInt(2, elemento.getProdotto().getId());
-        statement.setString(3, elemento.getProdotto().getNome());
-        statement.setDouble(4, elemento.getProdotto().getPrezzo());
-        statement.setInt(5, elemento.getQuantita());
-
-        statement.executeUpdate();
-        statement.close();
-    }
-
-    /**
-     * Scala dal database la quantità acquistata di un prodotto.
-     *
-     * @param connessione connessione SQL già aperta
-     * @param elemento elemento del carrello acquistato
-     * @throws SQLException se la query fallisce
-     */
-    private void scalaQuantitaProdotto(Connection connessione, ElementoCarrello elemento)
-            throws SQLException {
-
-        String sql = "UPDATE prodotti SET quantita = quantita - ? WHERE id = ?";
-
-        PreparedStatement statement = connessione.prepareStatement(sql);
-
-        statement.setInt(1, elemento.getQuantita());
-        statement.setInt(2, elemento.getProdotto().getId());
-
-        statement.executeUpdate();
-        statement.close();
-    }
-
-    /**
-     * Recupera tutti gli ordini effettuati da un determinato utente.
-     *
-     * Verrà usato nella pagina storico ordini.
+     * Il metodo viene usato nella pagina "I miei ordini".
      *
      * @param idUtente id dell'utente loggato
      * @return lista degli ordini dell'utente
@@ -204,14 +153,14 @@ public class OrdineDAO {
     }
 
     /**
-     * Recupera un ordine tramite id e id utente.
+     * Recupera un ordine specifico appartenente a uno specifico utente.
      *
-     * Il controllo sull'id utente serve per evitare che un utente possa
-     * visualizzare ordini appartenenti ad altri utenti.
+     * Il controllo sull'id utente impedisce a un utente di visualizzare
+     * ordini appartenenti ad altri account.
      *
-     * @param idOrdine id dell'ordine
+     * @param idOrdine id dell'ordine da recuperare
      * @param idUtente id dell'utente loggato
-     * @return ordine trovato oppure null
+     * @return ordine trovato con i relativi dettagli, oppure null se non esiste
      */
     public Ordine trovaOrdinePerUtente(int idOrdine, int idUtente) {
         Ordine ordine = null;
@@ -228,6 +177,10 @@ public class OrdineDAO {
             try (ResultSet risultato = statement.executeQuery()) {
                 if (risultato.next()) {
                     ordine = creaOrdineDaResultSet(risultato);
+
+                    /*
+                     * Recupera anche i prodotti acquistati nell'ordine.
+                     */
                     ordine.setDettagli(trovaDettagliOrdine(idOrdine));
                 }
             }
@@ -240,12 +193,165 @@ public class OrdineDAO {
     }
 
     /**
-     * Recupera i dettagli di un ordine.
+     * Recupera tutti gli ordini presenti nel database.
      *
-     * @param idOrdine id dell'ordine
-     * @return lista dei prodotti acquistati nell'ordine
+     * Il metodo viene usato nell'area amministratore, dove devono essere
+     * visibili gli ordini di tutti gli utenti.
+     *
+     * @return lista completa degli ordini
      */
-    public ArrayList<DettaglioOrdine> trovaDettagliOrdine(int idOrdine) {
+    public ArrayList<Ordine> trovaTuttiOrdini() {
+        ArrayList<Ordine> ordini = new ArrayList<Ordine>();
+
+        String sql = "SELECT * FROM ordini ORDER BY data_ordine DESC";
+
+        try (
+            Connection connessione = ConnessioneDatabase.getConnessione();
+            PreparedStatement statement = connessione.prepareStatement(sql);
+            ResultSet risultato = statement.executeQuery()
+        ) {
+            while (risultato.next()) {
+                Ordine ordine = creaOrdineDaResultSet(risultato);
+                ordini.add(ordine);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return ordini;
+    }
+
+    /**
+     * Recupera un ordine tramite il suo id senza controllare l'utente proprietario.
+     *
+     * Il metodo viene usato nell'area amministratore, dove l'admin può vedere
+     * gli ordini di tutti gli utenti.
+     *
+     * @param idOrdine id dell'ordine da recuperare
+     * @return ordine trovato con i relativi dettagli, oppure null se non esiste
+     */
+    public Ordine trovaOrdinePerAdmin(int idOrdine) {
+        Ordine ordine = null;
+
+        String sql = "SELECT * FROM ordini WHERE id = ?";
+
+        try (
+            Connection connessione = ConnessioneDatabase.getConnessione();
+            PreparedStatement statement = connessione.prepareStatement(sql)
+        ) {
+            statement.setInt(1, idOrdine);
+
+            try (ResultSet risultato = statement.executeQuery()) {
+                if (risultato.next()) {
+                    ordine = creaOrdineDaResultSet(risultato);
+
+                    /*
+                     * Recupera anche i prodotti collegati all'ordine.
+                     */
+                    ordine.setDettagli(trovaDettagliOrdine(idOrdine));
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return ordine;
+    }
+
+    /**
+     * Aggiorna lo stato di un ordine.
+     *
+     * Il metodo viene usato dall'area amministratore per modificare
+     * l'avanzamento di un ordine.
+     *
+     * @param idOrdine id dell'ordine da aggiornare
+     * @param stato nuovo stato dell'ordine
+     * @return true se l'aggiornamento è riuscito, false altrimenti
+     */
+    public boolean aggiornaStatoOrdine(int idOrdine, String stato) {
+        boolean aggiornato = false;
+
+        String sql = "UPDATE ordini SET stato = ? WHERE id = ?";
+
+        try (
+            Connection connessione = ConnessioneDatabase.getConnessione();
+            PreparedStatement statement = connessione.prepareStatement(sql)
+        ) {
+            statement.setString(1, stato);
+            statement.setInt(2, idOrdine);
+
+            int righeAggiornate = statement.executeUpdate();
+
+            if (righeAggiornate > 0) {
+                aggiornato = true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return aggiornato;
+    }
+
+    /**
+     * Inserisce un dettaglio ordine nella tabella dettagli_ordine.
+     *
+     * Ogni dettaglio rappresenta un prodotto acquistato in un ordine.
+     *
+     * @param connessione connessione usata nella transazione
+     * @param idOrdine id dell'ordine appena creato
+     * @param elemento elemento del carrello da salvare come dettaglio
+     * @throws SQLException in caso di errore SQL
+     */
+    private void inserisciDettaglioOrdine(Connection connessione, int idOrdine, ElementoCarrello elemento)
+            throws SQLException {
+
+        String sql = "INSERT INTO dettagli_ordine "
+                + "(id_ordine, id_prodotto, nome_prodotto, prezzo, quantita) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
+        try (PreparedStatement statement = connessione.prepareStatement(sql)) {
+            statement.setInt(1, idOrdine);
+            statement.setInt(2, elemento.getProdotto().getId());
+            statement.setString(3, elemento.getProdotto().getNome());
+            statement.setDouble(4, elemento.getProdotto().getPrezzo());
+            statement.setInt(5, elemento.getQuantita());
+
+            statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Scala la quantità disponibile di un prodotto dopo l'acquisto.
+     *
+     * La quantità viene ridotta in base alla quantità acquistata.
+     *
+     * @param connessione connessione usata nella transazione
+     * @param elemento elemento del carrello acquistato
+     * @throws SQLException in caso di errore SQL
+     */
+    private void scalaQuantitaProdotto(Connection connessione, ElementoCarrello elemento)
+            throws SQLException {
+
+        String sql = "UPDATE prodotti SET quantita = quantita - ? WHERE id = ?";
+
+        try (PreparedStatement statement = connessione.prepareStatement(sql)) {
+            statement.setInt(1, elemento.getQuantita());
+            statement.setInt(2, elemento.getProdotto().getId());
+
+            statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Recupera i dettagli di un ordine dalla tabella dettagli_ordine.
+     *
+     * @param idOrdine id dell'ordine di cui recuperare i dettagli
+     * @return lista dei dettagli ordine
+     */
+    private ArrayList<DettaglioOrdine> trovaDettagliOrdine(int idOrdine) {
         ArrayList<DettaglioOrdine> dettagli = new ArrayList<DettaglioOrdine>();
 
         String sql = "SELECT * FROM dettagli_ordine WHERE id_ordine = ?";
@@ -279,11 +385,13 @@ public class OrdineDAO {
     }
 
     /**
-     * Converte una riga della tabella ordini in un oggetto Ordine.
+     * Crea un oggetto Ordine partendo da una riga del ResultSet.
      *
-     * @param risultato ResultSet posizionato su una riga valida
+     * Questo metodo evita di ripetere lo stesso codice in più query.
+     *
+     * @param risultato ResultSet posizionato sulla riga dell'ordine
      * @return oggetto Ordine valorizzato
-     * @throws SQLException se la lettura dei dati fallisce
+     * @throws SQLException in caso di errore nella lettura dei dati
      */
     private Ordine creaOrdineDaResultSet(ResultSet risultato) throws SQLException {
         Ordine ordine = new Ordine();
@@ -298,35 +406,5 @@ public class OrdineDAO {
         ordine.setDataOrdine(risultato.getTimestamp("data_ordine"));
 
         return ordine;
-    }
-    
-    /**
-     * Recupera tutti gli ordini presenti nel database.
-     *
-     * Il metodo viene usato nell'area amministratore, dove devono essere visibili
-     * gli ordini di tutti gli utenti.
-     *
-     * @return lista completa degli ordini
-     */
-    public ArrayList<Ordine> trovaTuttiOrdini() {
-        ArrayList<Ordine> ordini = new ArrayList<Ordine>();
-
-        String sql = "SELECT * FROM ordini ORDER BY data_ordine DESC";
-
-        try (
-            Connection connessione = ConnessioneDatabase.getConnessione();
-            PreparedStatement statement = connessione.prepareStatement(sql);
-            ResultSet risultato = statement.executeQuery()
-        ) {
-            while (risultato.next()) {
-                Ordine ordine = creaOrdineDaResultSet(risultato);
-                ordini.add(ordine);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return ordini;
     }
 }
