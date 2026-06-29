@@ -215,4 +215,49 @@ public class ProdottoDAO {
 
         return inserito;
     }
+    
+    /**
+     * Aggiorna i dati di un prodotto esistente nella tabella prodotti.
+     *
+     * Il metodo viene usato dall'area amministratore quando viene modificato
+     * un prodotto già presente nel catalogo.
+     *
+     * @param prodotto prodotto con i nuovi dati da salvare
+     * @return true se l'aggiornamento è riuscito, false altrimenti
+     */
+    public boolean aggiornaProdotto(Prodotto prodotto) {
+        boolean aggiornato = false;
+
+        String sql = "UPDATE prodotti "
+                + "SET nome = ?, gioco = ?, categoria = ?, rarita = ?, prezzo = ?, "
+                + "quantita = ?, immagine = ?, descrizione = ?, stato = ? "
+                + "WHERE id = ?";
+
+        try (
+            Connection connessione = ConnessioneDatabase.getConnessione();
+            PreparedStatement statement = connessione.prepareStatement(sql)
+        ) {
+            statement.setString(1, prodotto.getNome());
+            statement.setString(2, prodotto.getGioco());
+            statement.setString(3, prodotto.getCategoria());
+            statement.setString(4, prodotto.getRarita());
+            statement.setDouble(5, prodotto.getPrezzo());
+            statement.setInt(6, prodotto.getQuantita());
+            statement.setString(7, prodotto.getImmagine());
+            statement.setString(8, prodotto.getDescrizione());
+            statement.setString(9, prodotto.getStato());
+            statement.setInt(10, prodotto.getId());
+
+            int righeAggiornate = statement.executeUpdate();
+
+            if (righeAggiornate > 0) {
+                aggiornato = true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return aggiornato;
+    }
 }
