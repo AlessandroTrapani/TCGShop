@@ -5,21 +5,24 @@
 
 <%
     /*
-     * Recupera dalla request la lista dei prodotti inserita dalla Servlet.
-     * La Servlet CatalogoServlet salva questo attributo prima di fare forward.
+     * Recupera la lista dei prodotti passata dalla CatalogoServlet.
      */
     ArrayList<Prodotto> prodotti = (ArrayList<Prodotto>) request.getAttribute("prodotti");
 
+    /*
+     * Recupera i filtri usati nella ricerca.
+     * Questi valori servono per mantenere compilato il form dei filtri.
+     */
     String ricerca = (String) request.getAttribute("ricerca");
     String gioco = (String) request.getAttribute("gioco");
     String categoria = (String) request.getAttribute("categoria");
 
     /*
-     * Recupero l'eventuale utente loggato dalla sessione.
-     * Serve per mostrare Login oppure Logout nel menu.
+     * Recupera l'utente loggato dalla sessione.
+     * Il valore viene usato per mostrare il menu corretto.
      */
     Utente utenteLoggato = (Utente) session.getAttribute("utenteLoggato");
-    
+
     if (ricerca == null) {
         ricerca = "";
     }
@@ -52,22 +55,27 @@
                 <a href="${pageContext.request.contextPath}/index.jsp">Home</a>
                 <a href="${pageContext.request.contextPath}/catalogo">Catalogo</a>
                 <a href="${pageContext.request.contextPath}/carrello">Carrello</a>
+
                 <%
-    /*
-     * Se l'utente è loggato mostro Logout.
-     * Se invece non è loggato mostro Login.
-     */
-    if (utenteLoggato != null) {
-%>
-    <a href="${pageContext.request.contextPath}/storico-ordini">I miei ordini</a>
-    <a href="${pageContext.request.contextPath}/logout">Logout</a>
-<%
-    } else {
-%>
-    <a href="${pageContext.request.contextPath}/login">Login</a>
-<%
-    }
-%>
+                    /*
+                     * Mostra i link in base allo stato dell'utente.
+                     */
+                    if (utenteLoggato == null) {
+                %>
+                    <a href="${pageContext.request.contextPath}/login">Login</a>
+                <%
+                    } else if ("ADMIN".equals(utenteLoggato.getRuolo())) {
+                %>
+                    <a href="${pageContext.request.contextPath}/admin/home">Area admin</a>
+                    <a href="${pageContext.request.contextPath}/logout">Logout</a>
+                <%
+                    } else {
+                %>
+                    <a href="${pageContext.request.contextPath}/storico-ordini">I miei ordini</a>
+                    <a href="${pageContext.request.contextPath}/logout">Logout</a>
+                <%
+                    }
+                %>
             </nav>
         </div>
     </header>
@@ -77,7 +85,10 @@
 
         <h2>Catalogo prodotti</h2>
 
-        <!-- Form di filtro prodotti -->
+        <!--
+            Form dei filtri.
+            I dati vengono inviati alla CatalogoServlet tramite metodo GET.
+        -->
         <form method="get" action="${pageContext.request.contextPath}/catalogo">
 
             <label for="ricerca">Cerca prodotto</label>
@@ -86,7 +97,7 @@
                 id="ricerca" 
                 name="ricerca" 
                 value="<%= ricerca %>"
-                placeholder="Es. Charizard, Box, Magic">
+                placeholder="Es. Charizard">
 
             <label for="gioco">Gioco</label>
             <select id="gioco" name="gioco">
@@ -107,61 +118,93 @@
                 <option value="Accessori" <%= "Accessori".equals(categoria) ? "selected" : "" %>>Accessori</option>
             </select>
 
-            <button class="bottone" type="submit">Filtra</button>
+            <br><br>
+
+            <button class="bottone" type="submit">
+                Filtra
+            </button>
 
             <a class="bottone" href="${pageContext.request.contextPath}/catalogo">
-                Rimuovi filtri
+                Reset
             </a>
+
         </form>
 
         <hr>
 
-        <!-- Lista prodotti -->
-        <section>
+        <%
+            /*
+             * Se non ci sono prodotti, mostra un messaggio.
+             */
+            if (prodotti == null || prodotti.isEmpty()) {
+        %>
 
-            <%
-                if (prodotti == null || prodotti.isEmpty()) {
-            %>
+            <p>Nessun prodotto trovato.</p>
 
-                <p>Nessun prodotto trovato.</p>
+        <%
+            } else {
+        %>
 
-            <%
-                } else {
-            %>
+            <!-- Griglia dei prodotti disponibili nel catalogo -->
+            <section class="griglia-prodotti">
 
-                <div class="griglia-prodotti">
+                <%
+                    for (Prodotto prodotto : prodotti) {
+                %>
 
-                    <%
-                        for (Prodotto prodotto : prodotti) {
-                    %>
+                    <article class="card-prodotto">
 
-                        <article class="card-prodotto">
+                        <%
+                            /*
+                             * Recupera il nome dell'immagine del prodotto.
+                             * Se l'immagine non è presente, viene usato un placeholder.
+                             */
+                            String immagineProdotto = prodotto.getImmagine();
 
-                            <h3><%= prodotto.getNome() %></h3>
+                            if (immagineProdotto == null || immagineProdotto.trim().equals("")) {
+                                immagineProdotto = "placeholder.jpg";
+                            }
+                        %>
 
-                            <p><strong>Gioco:</strong> <%= prodotto.getGioco() %></p>
-                            <p><strong>Categoria:</strong> <%= prodotto.getCategoria() %></p>
+                        <img 
+                            class="immagine-card-prodotto"
+                            src="${pageContext.request.contextPath}/images/prodotti/<%= immagineProdotto %>" 
+                            alt="<%= prodotto.getNome() %>">
+
+                        <h3><%= prodotto.getNome() %></h3>
+
+                        <p><strong>Gioco:</strong> <%= prodotto.getGioco() %></p>
+                        <p><strong>Categoria:</strong> <%= prodotto.getCategoria() %></p>
+
+                        <%
+                            /*
+                             * Mostra la rarità solo se presente.
+                             */
+                            if (prodotto.getRarita() != null && !prodotto.getRarita().trim().equals("")) {
+                        %>
                             <p><strong>Rarità:</strong> <%= prodotto.getRarita() %></p>
-                            <p><strong>Prezzo:</strong> € <%= prodotto.getPrezzo() %></p>
-                            <p><strong>Disponibilità:</strong> <%= prodotto.getQuantita() %> pezzi</p>
+                        <%
+                            }
+                        %>
 
-                            <a class="bottone" href="${pageContext.request.contextPath}/dettaglio-prodotto?id=<%= prodotto.getId() %>">
-                                Dettaglio
-                            </a>
+                        <p><strong>Prezzo:</strong> € <%= prodotto.getPrezzo() %></p>
+                        <p><strong>Disponibili:</strong> <%= prodotto.getQuantita() %></p>
 
-                        </article>
+                        <a class="bottone" href="${pageContext.request.contextPath}/dettaglio-prodotto?id=<%= prodotto.getId() %>">
+                            Dettaglio
+                        </a>
 
-                    <%
-                        }
-                    %>
+                    </article>
 
-                </div>
+                <%
+                    }
+                %>
 
-            <%
-                }
-            %>
+            </section>
 
-        </section>
+        <%
+            }
+        %>
 
     </main>
 

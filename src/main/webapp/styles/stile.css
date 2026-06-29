@@ -144,6 +144,19 @@ textarea {
 }
 
 /*
+ * Immagine mostrata nelle card del catalogo.
+ * Mantiene una dimensione ordinata e uniforme tra i prodotti.
+ */
+.immagine-card-prodotto {
+    width: 100%;
+    max-width: 220px;
+    height: 220px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 12px auto;
+}
+/*
+
  * Riquadro della pagina dettaglio prodotto.
  * Contiene le informazioni complete del prodotto selezionato.
  */
@@ -154,11 +167,16 @@ textarea {
 }
 
 /*
- * Area dedicata al nome del file immagine del prodotto.
- * 
+ * Immagine grande mostrata nella pagina dettaglio prodotto.
  */
 .immagine-prodotto {
-    margin-bottom: 20px;
+    width: 100%;
+    max-width: 350px;
+    height: 350px;
+    object-fit: contain;
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 12px;
 }
 
 /*
