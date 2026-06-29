@@ -221,6 +221,79 @@ public class OrdineDAO {
 
         return ordini;
     }
+    
+    /**
+     * Recupera gli ordini dell'area admin applicando filtri opzionali.
+     *
+     * I filtri disponibili sono:
+     * - data inizio
+     * - data fine
+     * - id utente
+     *
+     * Se un filtro non viene valorizzato, non viene applicato.
+     *
+     * @param dataInizio data iniziale nel formato yyyy-MM-dd, oppure stringa vuota
+     * @param dataFine data finale nel formato yyyy-MM-dd, oppure stringa vuota
+     * @param idUtente id del cliente da filtrare, oppure 0 per tutti i clienti
+     * @return lista degli ordini filtrati
+     */
+    public ArrayList<Ordine> trovaOrdiniAdminFiltrati(String dataInizio, String dataFine, int idUtente) {
+        ArrayList<Ordine> ordini = new ArrayList<Ordine>();
+
+        String sql = "SELECT * FROM ordini "
+                + "WHERE (? IS NULL OR data_ordine >= ?) "
+                + "AND (? IS NULL OR data_ordine <= ?) "
+                + "AND (? = 0 OR id_utente = ?) "
+                + "ORDER BY data_ordine DESC";
+
+        try (
+            Connection connessione = ConnessioneDatabase.getConnessione();
+            PreparedStatement statement = connessione.prepareStatement(sql)
+        ) {
+            /*
+             * Prepara il filtro data inizio.
+             * Se la data è vuota, il filtro non viene applicato.
+             */
+            if (dataInizio == null || dataInizio.trim().equals("")) {
+                statement.setString(1, null);
+                statement.setString(2, null);
+            } else {
+                statement.setString(1, dataInizio.trim() + " 00:00:00");
+                statement.setString(2, dataInizio.trim() + " 00:00:00");
+            }
+
+            /*
+             * Prepara il filtro data fine.
+             * Viene impostata l'ora 23:59:59 per includere tutta la giornata.
+             */
+            if (dataFine == null || dataFine.trim().equals("")) {
+                statement.setString(3, null);
+                statement.setString(4, null);
+            } else {
+                statement.setString(3, dataFine.trim() + " 23:59:59");
+                statement.setString(4, dataFine.trim() + " 23:59:59");
+            }
+
+            /*
+             * Prepara il filtro cliente.
+             * Se idUtente vale 0, vengono mostrati gli ordini di tutti i clienti.
+             */
+            statement.setInt(5, idUtente);
+            statement.setInt(6, idUtente);
+
+            try (ResultSet risultato = statement.executeQuery()) {
+                while (risultato.next()) {
+                    Ordine ordine = creaOrdineDaResultSet(risultato);
+                    ordini.add(ordine);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return ordini;
+    }
 
     /**
      * Recupera un ordine tramite il suo id senza controllare l'utente proprietario.

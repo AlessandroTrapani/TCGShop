@@ -10,11 +10,31 @@
     ArrayList<Ordine> ordini = (ArrayList<Ordine>) request.getAttribute("ordini");
 
     /*
+     * Recupera eventuali messaggi e filtri passati dalla Servlet.
+     */
+    String errore = (String) request.getAttribute("errore");
+    String dataInizio = (String) request.getAttribute("dataInizio");
+    String dataFine = (String) request.getAttribute("dataFine");
+    String idUtente = (String) request.getAttribute("idUtente");
+
+    /*
      * Recupera l'utente loggato dalla sessione.
      * In questa pagina dovrebbe essere sempre un admin perché l'accesso
      * viene protetto da FiltroAdmin.
      */
     Utente utenteLoggato = (Utente) session.getAttribute("utenteLoggato");
+
+    if (dataInizio == null) {
+        dataInizio = "";
+    }
+
+    if (dataFine == null) {
+        dataFine = "";
+    }
+
+    if (idUtente == null) {
+        idUtente = "";
+    }
 %>
 
 <!DOCTYPE html>
@@ -61,6 +81,62 @@
 
         <%
             /*
+             * Mostra eventuale errore sui filtri.
+             */
+            if (errore != null) {
+        %>
+            <p class="messaggio-errore"><%= errore %></p>
+        <%
+            }
+        %>
+
+        <!--
+            Form dei filtri ordini.
+            I filtri vengono inviati alla AdminOrdiniServlet con metodo GET.
+        -->
+        <section class="box-info">
+            <h3>Filtra ordini</h3>
+
+            <form method="get" action="${pageContext.request.contextPath}/admin/ordini">
+
+                <label for="dataInizio">Data inizio</label>
+                <input 
+                    type="date" 
+                    id="dataInizio" 
+                    name="dataInizio" 
+                    value="<%= dataInizio %>">
+
+                <label for="dataFine">Data fine</label>
+                <input 
+                    type="date" 
+                    id="dataFine" 
+                    name="dataFine" 
+                    value="<%= dataFine %>">
+
+                <label for="idUtente">ID cliente</label>
+                <input 
+                    type="number" 
+                    id="idUtente" 
+                    name="idUtente" 
+                    value="<%= idUtente %>"
+                    min="1"
+                    placeholder="Es. 2">
+
+                <br><br>
+
+                <button class="bottone" type="submit">
+                    Filtra
+                </button>
+
+                <a class="bottone" href="${pageContext.request.contextPath}/admin/ordini">
+                    Reset
+                </a>
+
+            </form>
+        </section>
+
+        <%
+            /*
              * Se non sono presenti ordini, mostra un messaggio.
              */
             if (ordini == null || ordini.isEmpty()) {
@@ -77,7 +153,7 @@
                 <thead>
                     <tr>
                         <th>ID ordine</th>
-                        <th>ID utente</th>
+                        <th>ID cliente</th>
                         <th>Data</th>
                         <th>Email consegna</th>
                         <th>Totale</th>
