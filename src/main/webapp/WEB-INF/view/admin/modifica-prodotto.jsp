@@ -86,8 +86,9 @@
                 Form per modificare un prodotto.
                 I dati vengono inviati alla AdminModificaProdottoServlet.
             -->
-           <form id="form-prodotto-admin" method="post" action="${pageContext.request.contextPath}/admin/nuovo-prodotto" novalidate>
-
+           <form id="form-prodotto-admin" method="post" action="${pageContext.request.contextPath}/admin/modifica-prodotto" 	novalidate>
+			<input type="hidden" name="id" value="<%= prodotto.getId() %>">
+			
                 <label for="nome">Nome prodotto</label>
                 <input 
                     type="text" 
