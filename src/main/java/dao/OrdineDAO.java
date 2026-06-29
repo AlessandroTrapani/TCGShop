@@ -399,7 +399,8 @@ public class OrdineDAO {
     /**
      * Scala la quantità disponibile di un prodotto dopo l'acquisto.
      *
-     * La quantità viene ridotta in base alla quantità acquistata.
+     * Se dopo l'acquisto la quantità arriva a zero, aggiorna anche
+     * lo stato del prodotto a NON_DISPONIBILE.
      *
      * @param connessione connessione usata nella transazione
      * @param elemento elemento del carrello acquistato
@@ -408,11 +409,18 @@ public class OrdineDAO {
     private void scalaQuantitaProdotto(Connection connessione, ElementoCarrello elemento)
             throws SQLException {
 
-        String sql = "UPDATE prodotti SET quantita = quantita - ? WHERE id = ?";
+        String sql = "UPDATE prodotti "
+                + "SET quantita = quantita - ?, "
+                + "stato = CASE "
+                + "    WHEN quantita - ? <= 0 THEN 'NON_DISPONIBILE' "
+                + "    ELSE stato "
+                + "END "
+                + "WHERE id = ?";
 
         try (PreparedStatement statement = connessione.prepareStatement(sql)) {
             statement.setInt(1, elemento.getQuantita());
-            statement.setInt(2, elemento.getProdotto().getId());
+            statement.setInt(2, elemento.getQuantita());
+            statement.setInt(3, elemento.getProdotto().getId());
 
             statement.executeUpdate();
         }
