@@ -71,7 +71,6 @@
 
             <!-- Menu principale amministratore -->
             <nav class="menu-principale">
-                <a href="${pageContext.request.contextPath}/index.jsp">Sito</a>
                 <a href="${pageContext.request.contextPath}/admin/home">Dashboard</a>
                 <a href="${pageContext.request.contextPath}/admin/prodotti">Prodotti</a>
                 <a href="${pageContext.request.contextPath}/admin/ordini">Ordini</a>

@@ -11,12 +11,15 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.Utente;
 
 /**
- * Filtro che protegge le pagine riservate agli utenti loggati.
+ * Filtro che protegge le pagine riservate agli utenti normali.
  * 
  * Controlla che nella sessione siano presenti utenteLoggato e tokenAccesso.
+ * Controlla inoltre che il ruolo dell'utente sia UTENTE.
  * Se l'utente non è autenticato, viene reindirizzato alla pagina di login.
+ * Se l'utente è admin, viene reindirizzato all'area amministratore.
  */
 @WebFilter(urlPatterns = {
         "/checkout",
@@ -27,10 +30,11 @@ public class FiltroUtente implements Filter {
 
     /**
      * Intercetta le richieste verso le pagine utente protette.
-     * 
-     * Se la sessione contiene utenteLoggato e tokenAccesso, la richiesta
-     * prosegue verso la Servlet richiesta. In caso contrario, l'utente viene
-     * reindirizzato alla pagina di login.
+     *
+     * Se la sessione contiene un utente con ruolo UTENTE, la richiesta
+     * prosegue verso la Servlet richiesta.
+     * Se la sessione non è valida, l'utente viene mandato al login.
+     * Se l'utente è ADMIN, viene mandato alla dashboard admin.
      *
      * @param request richiesta generica ricevuta dal filtro
      * @param response risposta generica inviata dal filtro
@@ -47,32 +51,42 @@ public class FiltroUtente implements Filter {
 
         /*
          * Recupera la sessione esistente senza crearne una nuova.
-         * Se la sessione non esiste, significa che l'utente non è loggato.
          */
         HttpSession sessione = richiestaHttp.getSession(false);
 
-        boolean utenteAutenticato = false;
+        if (sessione == null
+                || sessione.getAttribute("utenteLoggato") == null
+                || sessione.getAttribute("tokenAccesso") == null) {
 
-        /*
-         * Controlla la presenza degli attributi salvati durante il login.
-         */
-        if (sessione != null
-                && sessione.getAttribute("utenteLoggato") != null
-                && sessione.getAttribute("tokenAccesso") != null) {
-
-            utenteAutenticato = true;
-        }
-
-        if (utenteAutenticato) {
             /*
-             * La richiesta prosegue verso la Servlet richiesta.
-             */
-            chain.doFilter(request, response);
-        } else {
-            /*
-             * L'utente non autenticato viene mandato al login.
+             * Se l'utente non è autenticato, viene mandato al login.
              */
             rispostaHttp.sendRedirect(richiestaHttp.getContextPath() + "/login");
+            return;
         }
+
+        Utente utenteLoggato = (Utente) sessione.getAttribute("utenteLoggato");
+
+        if ("ADMIN".equals(utenteLoggato.getRuolo())) {
+            /*
+             * Se l'utente è admin, non può usare le pagine riservate
+             * al cliente e viene mandato alla dashboard admin.
+             */
+            rispostaHttp.sendRedirect(richiestaHttp.getContextPath() + "/admin/home");
+            return;
+        }
+
+        if ("UTENTE".equals(utenteLoggato.getRuolo())) {
+            /*
+             * L'utente normale può proseguire verso la risorsa richiesta.
+             */
+            chain.doFilter(request, response);
+            return;
+        }
+
+        /*
+         * Qualsiasi altro ruolo non previsto viene mandato al login.
+         */
+        rispostaHttp.sendRedirect(richiestaHttp.getContextPath() + "/login");
     }
 }
