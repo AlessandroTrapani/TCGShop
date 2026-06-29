@@ -129,4 +129,47 @@ public class ProdottoDAO {
 
         return prodotto;
     }
+    
+    /**
+     * Recupera tutti i prodotti presenti nel database.
+     * 
+     * Questo metodo viene usato nell'area admin, dove devono essere visibili
+     * anche i prodotti non disponibili o eliminati logicamente.
+     *
+     * @return lista completa dei prodotti
+     */
+    public ArrayList<Prodotto> trovaTuttiAdmin() {
+        ArrayList<Prodotto> prodotti = new ArrayList<Prodotto>();
+
+        String sql = "SELECT * FROM prodotti ORDER BY data_inserimento DESC";
+
+        try (
+            Connection connessione = ConnessioneDatabase.getConnessione();
+            PreparedStatement statement = connessione.prepareStatement(sql);
+            ResultSet risultato = statement.executeQuery()
+        ) {
+            while (risultato.next()) {
+                Prodotto prodotto = new Prodotto();
+
+                prodotto.setId(risultato.getInt("id"));
+                prodotto.setNome(risultato.getString("nome"));
+                prodotto.setGioco(risultato.getString("gioco"));
+                prodotto.setCategoria(risultato.getString("categoria"));
+                prodotto.setRarita(risultato.getString("rarita"));
+                prodotto.setPrezzo(risultato.getDouble("prezzo"));
+                prodotto.setQuantita(risultato.getInt("quantita"));
+                prodotto.setImmagine(risultato.getString("immagine"));
+                prodotto.setDescrizione(risultato.getString("descrizione"));
+                prodotto.setStato(risultato.getString("stato"));
+                prodotto.setDataInserimento(risultato.getTimestamp("data_inserimento"));
+
+                prodotti.add(prodotto);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return prodotti;
+    }
 }
