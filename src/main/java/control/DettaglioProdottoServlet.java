@@ -26,8 +26,8 @@ public class DettaglioProdottoServlet extends HttpServlet {
      * Gestisce le richieste GET verso l'URL /dettaglio-prodotto.
      * 
      * L'id del prodotto viene letto dai parametri della request.
-     * Se l'id non è valido o il prodotto non esiste, viene mostrato
-     * un messaggio di errore nella JSP.
+     * Se l'id non è valido, il prodotto non esiste oppure il prodotto
+     * non è disponibile, viene mostrato un messaggio di errore nella JSP.
      *
      * @param request richiesta HTTP ricevuta dal browser
      * @param response risposta HTTP inviata al browser
@@ -48,11 +48,25 @@ public class DettaglioProdottoServlet extends HttpServlet {
             try {
                 int id = Integer.parseInt(idParametro);
 
+                /*
+                 * Recupera il prodotto tramite id.
+                 */
                 ProdottoDAO prodottoDAO = new ProdottoDAO();
                 prodotto = prodottoDAO.trovaPerId(id);
 
+                /*
+                 * Se il prodotto non esiste, mostra un messaggio di errore.
+                 */
                 if (prodotto == null) {
                     errore = "Prodotto non trovato.";
+
+                /*
+                 * Se il prodotto è eliminato, non disponibile o senza quantità,
+                 * non deve essere mostrato nel dettaglio pubblico.
+                 */
+                } else if (!"DISPONIBILE".equals(prodotto.getStato()) || prodotto.getQuantita() <= 0) {
+                    errore = "Prodotto non disponibile.";
+                    prodotto = null;
                 }
 
             } catch (NumberFormatException e) {
