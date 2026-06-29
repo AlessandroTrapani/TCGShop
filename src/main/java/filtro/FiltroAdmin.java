@@ -71,7 +71,7 @@ public class FiltroAdmin implements Filter {
             /*
              * Se l'utente non è autorizzato, viene reindirizzato alla homepage.
              */
-            rispostaHttp.sendRedirect(richiestaHttp.getContextPath() + "/index.jsp");
+            rispostaHttp.sendRedirect(richiestaHttp.getContextPath() + "/home");
         }
     }
 }

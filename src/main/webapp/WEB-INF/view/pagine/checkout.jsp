@@ -58,7 +58,7 @@
 
             <!-- Menu principale pubblico -->
             <nav class="menu-principale">
-                <a href="${pageContext.request.contextPath}/index.jsp">Home</a>
+                <a href="${pageContext.request.contextPath}/home">Home</a>
                 <a href="${pageContext.request.contextPath}/catalogo">Catalogo</a>
                 <a href="${pageContext.request.contextPath}/carrello">Carrello</a>
 

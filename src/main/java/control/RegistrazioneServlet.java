@@ -114,7 +114,7 @@ public class RegistrazioneServlet extends HttpServlet {
                     String tokenAccesso = UUID.randomUUID().toString();
                     sessione.setAttribute("tokenAccesso", tokenAccesso);
 
-                    response.sendRedirect(request.getContextPath() + "/index.jsp");
+                    response.sendRedirect(request.getContextPath() + "/home");
                     return;
                 } else {
                     errore = "Errore durante la registrazione.";

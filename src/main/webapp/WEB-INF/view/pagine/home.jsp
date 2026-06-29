@@ -3,9 +3,8 @@
 
 <%
     /*
-     * Recupero l'eventuale utente loggato dalla sessione.
-     * Se è null significa che l'utente non ha ancora effettuato il login.
-     * Questo controllo serve per mostrare Login oppure Logout nel menu.
+     * Recupera l'eventuale utente loggato dalla sessione.
+     * Il valore viene usato per mostrare il menu corretto.
      */
     Utente utenteLoggato = (Utente) session.getAttribute("utenteLoggato");
 %>
@@ -26,23 +25,27 @@
 
             <!-- Menu principale pubblico -->
             <nav class="menu-principale">
-                <a href="${pageContext.request.contextPath}/index.jsp">Home</a>
+                <a href="${pageContext.request.contextPath}/home">Home</a>
                 <a href="${pageContext.request.contextPath}/catalogo">Catalogo</a>
                 <a href="${pageContext.request.contextPath}/carrello">Carrello</a>
 
                 <%
                     /*
-                     * Se l'utente è loggato mostro Logout.
-                     * Se invece non è loggato mostro Login.
+                     * Mostra i link in base allo stato dell'utente.
                      */
-                    if (utenteLoggato != null) {
+                    if (utenteLoggato == null) {
                 %>
-                	<a href="${pageContext.request.contextPath}/storico-ordini">I miei ordini</a>
+                    <a href="${pageContext.request.contextPath}/login">Login</a>
+                <%
+                    } else if ("ADMIN".equals(utenteLoggato.getRuolo())) {
+                %>
+                    <a href="${pageContext.request.contextPath}/admin/home">Area admin</a>
                     <a href="${pageContext.request.contextPath}/logout">Logout</a>
                 <%
                     } else {
                 %>
-                    <a href="${pageContext.request.contextPath}/login">Login</a>
+                    <a href="${pageContext.request.contextPath}/storico-ordini">I miei ordini</a>
+                    <a href="${pageContext.request.contextPath}/logout">Logout</a>
                 <%
                     }
                 %>
@@ -56,8 +59,7 @@
 
         <%
             /*
-             * Se l'utente è loggato, mostro un piccolo messaggio di benvenuto
-             * usando il nome salvato nell'oggetto Utente presente in sessione.
+             * Se l'utente è loggato, mostra un messaggio di benvenuto.
              */
             if (utenteLoggato != null) {
         %>
