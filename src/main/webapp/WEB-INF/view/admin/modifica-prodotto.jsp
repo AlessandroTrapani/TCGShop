@@ -86,9 +86,7 @@
                 Form per modificare un prodotto.
                 I dati vengono inviati alla AdminModificaProdottoServlet.
             -->
-            <form method="post" action="${pageContext.request.contextPath}/admin/modifica-prodotto">
-
-                <input type="hidden" name="id" value="<%= prodotto.getId() %>">
+           <form id="form-prodotto-admin" method="post" action="${pageContext.request.contextPath}/admin/nuovo-prodotto" novalidate>
 
                 <label for="nome">Nome prodotto</label>
                 <input 
@@ -96,7 +94,8 @@
                     id="nome" 
                     name="nome" 
                     value="<%= prodotto.getNome() %>">
-
+				<p id="errore-nome-prodotto" class="messaggio-errore-form"></p>
+				
                 <label for="gioco">Gioco</label>
                 <select id="gioco" name="gioco">
                     <option value="">Seleziona</option>
@@ -105,7 +104,8 @@
                     <option value="One Piece" <%= "One Piece".equals(prodotto.getGioco()) ? "selected" : "" %>>One Piece</option>
                     <option value="Accessori" <%= "Accessori".equals(prodotto.getGioco()) ? "selected" : "" %>>Accessori</option>
                 </select>
-
+				<p id="errore-gioco-prodotto" class="messaggio-errore-form"></p>
+				
                 <label for="categoria">Categoria</label>
                 <select id="categoria" name="categoria">
                     <option value="">Seleziona</option>
@@ -115,7 +115,8 @@
                     <option value="Carta singola" <%= "Carta singola".equals(prodotto.getCategoria()) ? "selected" : "" %>>Carta singola</option>
                     <option value="Accessori" <%= "Accessori".equals(prodotto.getCategoria()) ? "selected" : "" %>>Accessori</option>
                 </select>
-
+				<p id="errore-categoria-prodotto" class="messaggio-errore-form"></p>
+				
                 <label for="rarita">Rarità</label>
                 <input 
                     type="text" 
@@ -129,7 +130,8 @@
                     id="prezzo" 
                     name="prezzo" 
                     value="<%= prodotto.getPrezzo() %>">
-
+				<p id="errore-prezzo-prodotto" class="messaggio-errore-form"></p>
+				
                 <label for="quantita">Quantità</label>
                 <input 
                     type="number" 
@@ -137,7 +139,8 @@
                     name="quantita" 
                     value="<%= prodotto.getQuantita() %>"
                     min="0">
-
+				<p id="errore-quantita-prodotto" class="messaggio-errore-form"></p>
+				
                 <label for="immagine">Nome file immagine</label>
                 <input 
                     type="text" 
@@ -169,6 +172,6 @@
         %>
 
     </main>
-
+<script src="${pageContext.request.contextPath}/scripts/validazione-prodotto-admin.js"></script>
 </body>
 </html>
