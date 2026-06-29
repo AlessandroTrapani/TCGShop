@@ -172,4 +172,47 @@ public class ProdottoDAO {
 
         return prodotti;
     }
+    
+    /**
+     * Inserisce un nuovo prodotto nella tabella prodotti.
+     *
+     * Il prodotto viene creato dall'area amministratore.
+     * Lo stato viene calcolato dalla Servlet in base alla quantità inserita.
+     *
+     * @param prodotto prodotto da inserire nel database
+     * @return true se l'inserimento è riuscito, false altrimenti
+     */
+    public boolean inserisciProdotto(Prodotto prodotto) {
+        boolean inserito = false;
+
+        String sql = "INSERT INTO prodotti "
+                + "(nome, gioco, categoria, rarita, prezzo, quantita, immagine, descrizione, stato) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (
+            Connection connessione = ConnessioneDatabase.getConnessione();
+            PreparedStatement statement = connessione.prepareStatement(sql)
+        ) {
+            statement.setString(1, prodotto.getNome());
+            statement.setString(2, prodotto.getGioco());
+            statement.setString(3, prodotto.getCategoria());
+            statement.setString(4, prodotto.getRarita());
+            statement.setDouble(5, prodotto.getPrezzo());
+            statement.setInt(6, prodotto.getQuantita());
+            statement.setString(7, prodotto.getImmagine());
+            statement.setString(8, prodotto.getDescrizione());
+            statement.setString(9, prodotto.getStato());
+
+            int righeInserite = statement.executeUpdate();
+
+            if (righeInserite > 0) {
+                inserito = true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return inserito;
+    }
 }

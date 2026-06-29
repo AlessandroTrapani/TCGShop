@@ -100,12 +100,13 @@ label {
 }
 
 /*
- * Stile condiviso per input e select.
+ * Stile condiviso per input, select e textarea.
  * Viene usato nei filtri del catalogo e nei form
  * di login, registrazione, checkout e admin.
  */
 input,
-select {
+select,
+textarea {
     width: 100%;
     max-width: 350px;
     padding: 8px;
@@ -308,9 +309,10 @@ select {
      * su schermi medi e piccoli.
      */
     input,
-    select {
-        max-width: 100%;
-    }
+	select,
+	textarea {
+    	max-width: 100%;
+	}
 }
 
 /*
