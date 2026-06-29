@@ -112,9 +112,12 @@
                                     Modifica
                                 </a>
 
-                                <a class="bottone" href="${pageContext.request.contextPath}/admin/elimina-prodotto?id=<%= prodotto.getId() %>">
-                                    Elimina
-                                </a>
+                                <form method="post" action="${pageContext.request.contextPath}/admin/elimina-prodotto" style="display: inline;">
+    								<input type="hidden" name="id" value="<%= prodotto.getId() %>">
+    								<button class="bottone" type="submit">
+    									Elimina
+    								</button>
+								</form>
                             </td>
                         </tr>
 

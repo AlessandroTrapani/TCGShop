@@ -260,4 +260,38 @@ public class ProdottoDAO {
 
         return aggiornato;
     }
+    
+    /**
+     * Elimina logicamente un prodotto dal catalogo.
+     *
+     * Il prodotto non viene rimosso fisicamente dal database.
+     * Viene invece aggiornato il campo stato con il valore ELIMINATO.
+     *
+     * @param idProdotto id del prodotto da eliminare logicamente
+     * @return true se l'aggiornamento è riuscito, false altrimenti
+     */
+    public boolean eliminaLogicamente(int idProdotto) {
+        boolean eliminato = false;
+
+        String sql = "UPDATE prodotti SET stato = ? WHERE id = ?";
+
+        try (
+            Connection connessione = ConnessioneDatabase.getConnessione();
+            PreparedStatement statement = connessione.prepareStatement(sql)
+        ) {
+            statement.setString(1, "ELIMINATO");
+            statement.setInt(2, idProdotto);
+
+            int righeAggiornate = statement.executeUpdate();
+
+            if (righeAggiornate > 0) {
+                eliminato = true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return eliminato;
+    }
 }
