@@ -73,6 +73,10 @@ public class RegistrazioneServlet extends HttpServlet {
 
             errore = "Tutti i campi sono obbligatori.";
 
+        } else if (password.trim().length() < 5) {
+
+            errore = "La password deve contenere almeno 5 caratteri.";
+
         } else if (!password.equals(confermaPassword)) {
 
             errore = "Le password non coincidono.";

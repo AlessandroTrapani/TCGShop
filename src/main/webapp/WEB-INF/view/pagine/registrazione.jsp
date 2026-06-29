@@ -93,18 +93,22 @@
         <form id="form-registrazione" method="post" action="${pageContext.request.contextPath}/registrazione" novalidate>
 
             <label for="nome">Nome</label>
-            <input 
-                type="text" 
-                id="nome" 
-                name="nome" 
-                value="<%= nome %>">
+<input 
+    type="text" 
+    id="nome" 
+    name="nome" 
+    value="<%= nome %>">
 
-            <label for="cognome">Cognome</label>
-            <input 
-                type="text" 
-                id="cognome" 
-                name="cognome" 
-                value="<%= cognome %>">
+<p id="errore-nome-registrazione" class="messaggio-errore-form"></p>
+
+<label for="cognome">Cognome</label>
+<input 
+    type="text" 
+    id="cognome" 
+    name="cognome" 
+    value="<%= cognome %>">
+
+<p id="errore-cognome-registrazione" class="messaggio-errore-form"></p>
 
             <label for="email">Email</label>
             <input 
@@ -115,16 +119,20 @@
                 <p id="errore-email-registrazione" class="messaggio-errore-form"></p>
 
             <label for="password">Password</label>
-            <input 
-                type="password" 
-                id="password" 
-                name="password">
+<input 
+    type="password" 
+    id="password" 
+    name="password">
 
-            <label for="confermaPassword">Conferma password</label>
-            <input 
-                type="password" 
-                id="confermaPassword" 
-                name="confermaPassword">
+<p id="errore-password-registrazione" class="messaggio-errore-form"></p>
+
+<label for="confermaPassword">Conferma password</label>
+<input 
+    type="password" 
+    id="confermaPassword" 
+    name="confermaPassword">
+
+<p id="errore-conferma-password-registrazione" class="messaggio-errore-form"></p>
 
             <button class="bottone" type="submit">
                 Registrati

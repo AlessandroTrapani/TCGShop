@@ -1,89 +1,157 @@
 /*
  * File JavaScript dedicato alla validazione del form di registrazione.
  *
- * I controlli vengono eseguiti lato client usando regex, eventi,
+ * Controlla i dati lato client usando regex, eventi blur/input,
  * AJAX, JSON e messaggi mostrati direttamente nel DOM, senza usare alert.
  */
 
-/*
- * Attende il caricamento completo della pagina prima di cercare
- * gli elementi HTML del form.
- */
 document.addEventListener("DOMContentLoaded", function () {
 
     /*
-     * Recupero gli elementi principali del form di registrazione.
+     * Recupera gli elementi principali del form di registrazione.
      */
     const formRegistrazione = document.getElementById("form-registrazione");
+
+    const campoNome = document.getElementById("nome");
+    const campoCognome = document.getElementById("cognome");
     const campoEmail = document.getElementById("email");
-    const erroreEmail = document.getElementById("errore-email-registrazione");
+    const campoPassword = document.getElementById("password");
+    const campoConfermaPassword = document.getElementById("confermaPassword");
 
     /*
-     * Variabile usata per ricordare se l'email è valida anche lato server.
-     * Parte da false e diventa true solo quando la Servlet risponde
-     * che l'email è disponibile.
+     * Recupera gli elementi dedicati ai messaggi di errore.
+     */
+    const erroreNome = document.getElementById("errore-nome-registrazione");
+    const erroreCognome = document.getElementById("errore-cognome-registrazione");
+    const erroreEmail = document.getElementById("errore-email-registrazione");
+    const errorePassword = document.getElementById("errore-password-registrazione");
+    const erroreConfermaPassword = document.getElementById("errore-conferma-password-registrazione");
+
+    /*
+     * Indica se l'email è stata verificata dal server ed è disponibile.
      */
     let emailDisponibile = false;
 
     /*
      * Regex usata per controllare il formato dell'email.
-     * Verifica una struttura del tipo testo@testo.estensione.
      */
     const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    /**
-     * Mostra un messaggio di errore sotto al campo email.
-     *
-     * @param {string} messaggio testo da mostrare all'utente
+    /*
+     * Regex usata per nome e cognome.
+     * Accetta lettere, lettere accentate, spazi, apostrofi e trattini.
      */
-    function mostraErroreEmail(messaggio) {
-        erroreEmail.textContent = messaggio;
-        campoEmail.classList.add("input-errore");
-        emailDisponibile = false;
+    const regexNome = /^[A-Za-zÀ-ÿ' -]+$/;
+
+    /**
+     * Mostra un errore sotto al campo indicato.
+     *
+     * @param {HTMLElement} campo campo da evidenziare
+     * @param {HTMLElement} elementoErrore elemento in cui mostrare il messaggio
+     * @param {string} messaggio messaggio da visualizzare
+     */
+    function mostraErrore(campo, elementoErrore, messaggio) {
+        elementoErrore.textContent = messaggio;
+        campo.classList.add("input-errore");
     }
 
     /**
-     * Rimuove il messaggio di errore sotto al campo email.
+     * Rimuove l'errore dal campo indicato.
+     *
+     * @param {HTMLElement} campo campo da ripulire
+     * @param {HTMLElement} elementoErrore elemento errore da svuotare
      */
-    function rimuoviErroreEmail() {
-        erroreEmail.textContent = "";
-        campoEmail.classList.remove("input-errore");
+    function rimuoviErrore(campo, elementoErrore) {
+        elementoErrore.textContent = "";
+        campo.classList.remove("input-errore");
     }
 
     /**
-     * Controlla il formato dell'email usando una regex.
+     * Valida il nome.
      *
-     * @returns true se il formato è valido, false altrimenti
+     * @returns true se il nome è valido, false altrimenti
+     */
+    function validaNome() {
+        const nome = campoNome.value.trim();
+
+        if (nome === "") {
+            mostraErrore(campoNome, erroreNome, "Il nome è obbligatorio.");
+            return false;
+        }
+
+        if (nome.length < 2) {
+            mostraErrore(campoNome, erroreNome, "Il nome deve contenere almeno 2 caratteri.");
+            return false;
+        }
+
+        if (!regexNome.test(nome)) {
+            mostraErrore(campoNome, erroreNome, "Il nome può contenere solo lettere.");
+            return false;
+        }
+
+        rimuoviErrore(campoNome, erroreNome);
+        return true;
+    }
+
+    /**
+     * Valida il cognome.
+     *
+     * @returns true se il cognome è valido, false altrimenti
+     */
+    function validaCognome() {
+        const cognome = campoCognome.value.trim();
+
+        if (cognome === "") {
+            mostraErrore(campoCognome, erroreCognome, "Il cognome è obbligatorio.");
+            return false;
+        }
+
+        if (cognome.length < 2) {
+            mostraErrore(campoCognome, erroreCognome, "Il cognome deve contenere almeno 2 caratteri.");
+            return false;
+        }
+
+        if (!regexNome.test(cognome)) {
+            mostraErrore(campoCognome, erroreCognome, "Il cognome può contenere solo lettere.");
+            return false;
+        }
+
+        rimuoviErrore(campoCognome, erroreCognome);
+        return true;
+    }
+
+    /**
+     * Valida il formato dell'email.
+     *
+     * @returns true se il formato email è valido, false altrimenti
      */
     function validaFormatoEmail() {
         const emailInserita = campoEmail.value.trim();
 
         if (emailInserita === "") {
-            mostraErroreEmail("L'email è obbligatoria.");
+            mostraErrore(campoEmail, erroreEmail, "L'email è obbligatoria.");
+            emailDisponibile = false;
             return false;
         }
 
         if (!regexEmail.test(emailInserita)) {
-            mostraErroreEmail("Inserisci un indirizzo email valido.");
+            mostraErrore(campoEmail, erroreEmail, "Inserisci un indirizzo email valido.");
+            emailDisponibile = false;
             return false;
         }
 
-        rimuoviErroreEmail();
+        rimuoviErrore(campoEmail, erroreEmail);
         return true;
     }
 
     /**
      * Verifica tramite AJAX se l'email è già presente nel database.
-     * 
-     * La richiesta viene inviata alla Servlet /verifica-email.
-     * La risposta viene letta come JSON.
      */
     function verificaEmailAjax() {
         const emailInserita = campoEmail.value.trim();
 
         /*
-         * Prima di chiamare il server controllo il formato.
-         * Se il formato è sbagliato, evito una richiesta inutile.
+         * Controlla prima il formato per evitare chiamate inutili al server.
          */
         if (!validaFormatoEmail()) {
             return;
@@ -94,69 +162,119 @@ document.addEventListener("DOMContentLoaded", function () {
                 return response.json();
             })
             .then(function (dati) {
-
-                /*
-                 * La Servlet restituisce un JSON con:
-                 * dati.valida
-                 * dati.messaggio
-                 */
                 if (dati.valida) {
                     emailDisponibile = true;
-                    rimuoviErroreEmail();
+                    rimuoviErrore(campoEmail, erroreEmail);
                 } else {
-                    mostraErroreEmail(dati.messaggio);
+                    emailDisponibile = false;
+                    mostraErrore(campoEmail, erroreEmail, dati.messaggio);
                 }
             })
             .catch(function () {
-                /*
-                 * Questo errore gestisce problemi nella chiamata AJAX,
-                 * ad esempio Servlet non raggiungibile o risposta non valida.
-                 */
-                mostraErroreEmail("Errore durante la verifica dell'email.");
+                emailDisponibile = false;
+                mostraErrore(campoEmail, erroreEmail, "Errore durante la verifica dell'email.");
             });
     }
 
-    /*
-     * Quando l'utente esce dal campo email, controllo prima il formato
-     * e poi verifico tramite AJAX se l'email è già registrata.
+    /**
+     * Valida la password.
+     *
+     * La password deve avere almeno 5 caratteri.
+     *
+     * @returns true se la password è valida, false altrimenti
      */
-    if (campoEmail != null && erroreEmail != null) {
-        campoEmail.addEventListener("blur", function () {
-            verificaEmailAjax();
-        });
+    function validaPassword() {
+        const password = campoPassword.value.trim();
+
+        if (password === "") {
+            mostraErrore(campoPassword, errorePassword, "La password è obbligatoria.");
+            return false;
+        }
+
+        if (password.length < 5) {
+            mostraErrore(campoPassword, errorePassword, "La password deve contenere almeno 5 caratteri.");
+            return false;
+        }
+
+        rimuoviErrore(campoPassword, errorePassword);
+        return true;
+    }
+
+    /**
+     * Valida la conferma password.
+     *
+     * @returns true se la conferma password è valida, false altrimenti
+     */
+    function validaConfermaPassword() {
+        const password = campoPassword.value.trim();
+        const confermaPassword = campoConfermaPassword.value.trim();
+
+        if (confermaPassword === "") {
+            mostraErrore(campoConfermaPassword, erroreConfermaPassword, "La conferma password è obbligatoria.");
+            return false;
+        }
+
+        if (password !== confermaPassword) {
+            mostraErrore(campoConfermaPassword, erroreConfermaPassword, "Le password non coincidono.");
+            return false;
+        }
+
+        rimuoviErrore(campoConfermaPassword, erroreConfermaPassword);
+        return true;
     }
 
     /*
-     * Quando l'utente modifica l'email, considero di nuovo non valida
-     * la disponibilità, perché il valore è cambiato.
+     * Associa i controlli all'evento blur.
+     * Il messaggio viene mostrato quando l'utente esce dal campo.
      */
-    if (campoEmail != null) {
-        campoEmail.addEventListener("input", function () {
-            emailDisponibile = false;
-        });
-    }
+    campoNome.addEventListener("blur", validaNome);
+    campoCognome.addEventListener("blur", validaCognome);
+    campoEmail.addEventListener("blur", verificaEmailAjax);
+    campoPassword.addEventListener("blur", function () {
+        validaPassword();
+
+        /*
+         * Se la conferma è già stata compilata, la ricontrolla.
+         */
+        if (campoConfermaPassword.value.trim() !== "") {
+            validaConfermaPassword();
+        }
+    });
+    campoConfermaPassword.addEventListener("blur", validaConfermaPassword);
 
     /*
-     * Al submit del form ripeto i controlli disponibili lato client.
-     * Se il formato è errato o l'email risulta già non disponibile,
-     * blocco l'invio.
+     * Quando l'email cambia, la disponibilità deve essere verificata di nuovo.
      */
-    if (formRegistrazione != null) {
-        formRegistrazione.addEventListener("submit", function (event) {
+    campoEmail.addEventListener("input", function () {
+        emailDisponibile = false;
+    });
 
-            const formatoValido = validaFormatoEmail();
+    /*
+     * Controlla tutti i campi prima dell'invio del form.
+     */
+    formRegistrazione.addEventListener("submit", function (event) {
+        const nomeValido = validaNome();
+        const cognomeValido = validaCognome();
+        const emailFormatoValido = validaFormatoEmail();
+        const passwordValida = validaPassword();
+        const confermaPasswordValida = validaConfermaPassword();
 
-            if (!formatoValido || !emailDisponibile) {
-                event.preventDefault();
+        if (!nomeValido
+                || !cognomeValido
+                || !emailFormatoValido
+                || !emailDisponibile
+                || !passwordValida
+                || !confermaPasswordValida) {
 
-                /*
-                 * Se il formato è valido ma l'utente non è ancora uscito
-                 * dal campo email, forzo la verifica AJAX.
-                 */
-                if (formatoValido) {
-                    verificaEmailAjax();
-                }
+            event.preventDefault();
+
+            /*
+             * Se il formato email è valido ma l'email non è ancora stata
+             * verificata, forza la verifica AJAX.
+             */
+            if (emailFormatoValido && !emailDisponibile) {
+                verificaEmailAjax();
             }
-        });
-    }
+        }
+    });
 });
