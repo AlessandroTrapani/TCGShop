@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.Carrello;
 import model.Prodotto;
+import model.Utente;
 
 /**
  * Servlet che gestisce il carrello dell'utente.
@@ -27,6 +28,9 @@ public class CarrelloServlet extends HttpServlet {
     /**
      * Mostra la pagina del carrello.
      *
+     * Se l'utente loggato è un amministratore, viene reindirizzato
+     * alla dashboard admin perché non deve usare il carrello cliente.
+     *
      * @param request richiesta HTTP ricevuta dal browser
      * @param response risposta HTTP inviata al browser
      * @throws ServletException in caso di errore nel forward
@@ -38,8 +42,18 @@ public class CarrelloServlet extends HttpServlet {
         HttpSession sessione = request.getSession();
 
         /*
-         * Recupero il carrello dalla sessione.
-         * Se non esiste ancora, ne creo uno nuovo.
+         * Controlla se l'utente loggato è un amministratore.
+         * In quel caso blocca l'accesso al carrello e lo rimanda
+         * alla dashboard admin.
+         */
+        if (adminLoggato(sessione)) {
+            response.sendRedirect(request.getContextPath() + "/admin/home");
+            return;
+        }
+
+        /*
+         * Recupera il carrello dalla sessione.
+         * Se non esiste ancora, ne crea uno nuovo.
          */
         Carrello carrello = (Carrello) sessione.getAttribute("carrello");
 
@@ -63,6 +77,9 @@ public class CarrelloServlet extends HttpServlet {
      * - rimuovi
      * - svuota
      *
+     * Se l'utente loggato è un amministratore, viene reindirizzato
+     * alla dashboard admin.
+     *
      * @param request richiesta HTTP ricevuta dal form
      * @param response risposta HTTP inviata al browser
      * @throws ServletException in caso di errore nella Servlet
@@ -74,8 +91,17 @@ public class CarrelloServlet extends HttpServlet {
         HttpSession sessione = request.getSession();
 
         /*
-         * Recupero il carrello dalla sessione.
-         * Se non esiste, lo creo.
+         * Blocca qualsiasi modifica al carrello se l'utente loggato
+         * è un amministratore.
+         */
+        if (adminLoggato(sessione)) {
+            response.sendRedirect(request.getContextPath() + "/admin/home");
+            return;
+        }
+
+        /*
+         * Recupera il carrello dalla sessione.
+         * Se non esiste, lo crea.
          */
         Carrello carrello = (Carrello) sessione.getAttribute("carrello");
 
@@ -102,11 +128,31 @@ public class CarrelloServlet extends HttpServlet {
         }
 
         /*
-         * Dopo ogni modifica salvo il carrello aggiornato in sessione
-         * e torno alla pagina carrello.
+         * Dopo ogni modifica salva il carrello aggiornato in sessione
+         * e torna alla pagina carrello.
          */
         sessione.setAttribute("carrello", carrello);
         response.sendRedirect(request.getContextPath() + "/carrello");
+    }
+
+    /**
+     * Controlla se nella sessione è presente un utente con ruolo ADMIN.
+     *
+     * @param sessione sessione HTTP corrente
+     * @return true se l'utente loggato è admin, false altrimenti
+     */
+    private boolean adminLoggato(HttpSession sessione) {
+        boolean admin = false;
+
+        if (sessione != null) {
+            Utente utenteLoggato = (Utente) sessione.getAttribute("utenteLoggato");
+
+            if (utenteLoggato != null && "ADMIN".equals(utenteLoggato.getRuolo())) {
+                admin = true;
+            }
+        }
+
+        return admin;
     }
 
     /**
@@ -131,7 +177,7 @@ public class CarrelloServlet extends HttpServlet {
             Prodotto prodotto = prodottoDAO.trovaPerId(idProdotto);
 
             /*
-             * Aggiungo il prodotto solo se esiste, è disponibile
+             * Aggiunge il prodotto solo se esiste, è disponibile
              * e la quantità richiesta non supera quella presente in magazzino.
              */
             if (prodotto != null
